@@ -1,0 +1,28 @@
+cqlsh> create keyspace ycsb WITH REPLICATION = {'class' : 'NetworkTopologyStrategy', 'replication_factor': 3 };
+cqlsh> USE ycsb;
+cqlsh> create table usertable (y_id varchar primary key,field0 varchar,field1 varchar,field2 varchar,field3 varchar,field4 varchar,field5 varchar,field6 varchar,field7 varchar,field8 varchar,field9 varchar,field10 varchar,field11 varchar);
+
+bin/ycsb load scylla -s -P workloads/workloada \
+    -threads 100 -p recordcount=100000000 \
+    -p readproportion=0.5 -p updateproportion=0.5 \
+    -p fieldcount=10 -p fieldlength=409 \
+    -p insertstart=0 -p insertcount=100000000 \
+    -p scylla.local_dc="ap-northeast-1" \
+    -p scylla.tokenaware=true \
+    -p scylla.hosts="scylla-dp-4x-az.dataplatform.dev.smartnews.net" \
+    -p scylla.username=cassandra -p scylla.password=cassandra \
+    -p table="usertable"
+
+ycsb load scylla -s -P workloads/workloada -threads 100 -p measurement.interval=both -p target=25000 -p recordcount=100000000 -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=512 -p insertstart=0 -p insertcount=100000000 -p scylla.local_dc="ap-northeast-1" -p scylla.tokenaware=true -p scylla.hosts="scylla-dp-4x-az.dataplatform.dev.smartnews.net" -p scylla.username=cassandra -p scylla.password=cassandra -p table="usertable"
+
+$ bin/ycsb run scylla -s -P workloads/workloada \
+    -target 50000 -threads 50 -p recordcount=100000000 \
+    -p fieldcount=12 -p fieldlength=409 \
+    -p operationcount=100000000 \
+    -p scylla.local_dc="ap-northeast-1" \
+    -p scylla.tokenaware=true \
+    -p scylla.hosts="scylla-dp-4x-az.dataplatform.dev.smartnews.net" \
+    -p scylla.username=cassandra -p scylla.password=cassandra \
+    -p table="usertable"
+
+ycsb run scylla -s -P workloads/workloada -threads 100 -p measurement.interval=both -p target=25000 -p recordcount=100000000 -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=400 -p operationcount=100000000 -p scylla.local_dc="ap-northeast-1" -p scylla.tokenaware=true -p scylla.hosts="scylla-dp-4x-az.dataplatform.dev.smartnews.net" -p scylla.username=cassandra -p scylla.password=cassandra -p table="usertable"

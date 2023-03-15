@@ -1,0 +1,1 @@
+mvn install:install-file -Dfile=/data/YCSB/LoadBalancing-1.4.jar -DgroupId=com.scylladb.alternator -DartifactId=LoadBalancing -Dversion=1.3 -Dpackaging=jar -DgeneratePom=true
