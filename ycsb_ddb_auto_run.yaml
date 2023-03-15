@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ycsb-ddb-auto-run
+  namespace: realtime-streaming
+  labels:
+    app: ycsb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ycsb
+  template:
+    metadata:
+      labels:
+        app: ycsb
+    spec:
+      containers:
+      - name: ycsb
+        image: public.ecr.aws/j9i4p5a8/ycsb:v1
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/bash", "-c"]
+        args: ["mvn install -pl dynamodb -am -Dmaven.test.skip=true && bin/ycsb run scylla -s -P workloads/workloada -threads 80 -p recordcount=60000000 -p readpropotion=0.25 -p updateproportion=0.75 -p fieldcount=1 -p fieldlength=6000 -p insertstart=0 -p insertcount=60000000 -p scylla.username=cassandra -p scylla.password=cassandra -p scylla.hosts=\"scylla-dp-4x-az.dataplatform.dev.smartnews.net\" -p table=\"usertable_uuid\" -p scylla.port=19042 -p requestdistribution=zipfian"] 
+        resources:
+          requests:
+            memory: 10G
+            cpu: 4
+          limits:
+            memory: 10G
+            cpu: 4

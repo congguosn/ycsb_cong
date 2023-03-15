@@ -1,0 +1,5 @@
+Two modes to launch client app for scylla benchmarking.
+
+1. launch client pods with ycsb_manual_run.yaml, then run run_single.sh per pod to execute on pod.
+or
+2. set ycsb command in ycsb_auto_load.yaml, then launch it.
