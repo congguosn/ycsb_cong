@@ -9,3 +9,8 @@ k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb load scylla -s -P
 
 
 k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb run scylla -s -P workloads/workloada -threads 5 -p measurement.interval=both -p target=500 -p recordcount=100000 -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p operationcount=100000 -p scylla.local_dc="ldc1" -p scylla.tokenaware=true -p scylla.hosts="scylla-stress-test.dataplatform.dev.smartnews.net" -p scylla.username=cassandra -p scylla.password=cassandra -p table="usertable"
+
+
+#### image build
+docker build -t public.ecr.aws/j9i4p5a8/ycsb:v1 .
+docker push public.ecr.aws/j9i4p5a8/ycsb:v1
