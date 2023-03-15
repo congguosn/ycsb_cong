@@ -17,13 +17,13 @@ spec:
     spec:
       containers:
       - name: ycsb
-        image: public.ecr.aws/j9i4p5a8/ycsb:v3
+        image: public.ecr.aws/j9i4p5a8/ycsb:v1
         #imagePullPolicy: IfNotPresent
         imagePullPolicy: Always
         resources:
           requests:
-            memory: 20G
-            cpu: 8
+            memory: 10G
+            cpu: 2
           limits:
-            memory: 20G
-            cpu: 8
+            memory: 10G
+            cpu: 2
