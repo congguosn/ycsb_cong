@@ -1,2 +1,11 @@
-#### local trigger
+#### local trigger for ddb
 k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb load dynamodb -p measurement.interval=both -p target=500 -p dynamodb.endpoint=http://scylla-stress-test.dataplatform.dev.smartnews.net:8000 -p dynamodb.awsCredentialsFile=/opt/YCSB/dynamodb/conf/AWSCredentials.properties -P dynamodb/workload/workloada -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p insertstart=0 -p insertcount=100000 -P dynamodb/conf/dynamodb.properties -threads 6
+
+k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb run dynamodb -p measurement.interval=both -p target=500 -p dynamodb.endpoint=http://scylla-stress-test.dataplatform.dev.smartnews.net:8000 -p dynamodb.awsCredentialsFile=/opt/YCSB/dynamodb/conf/AWSCredentials.properties -P dynamodb/workload/workloada -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p insertstart=0 -p insertcount=100000 -P dynamodb/conf/dynamodb.properties -threads 6
+
+
+#### local trigger for scylla
+k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb load scylla -s -P workloads/workloada -threads 5 -p measurement.interval=both -p target=500 -p recordcount=100000 -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p operationcount=100000 -p scylla.local_dc="ldc1" -p scylla.tokenaware=true -p scylla.hosts="scylla-stress-test.dataplatform.dev.smartnews.net" -p scylla.username=cassandra -p scylla.password=cassandra -p table="usertable"
+
+
+k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb run scylla -s -P workloads/workloada -threads 5 -p measurement.interval=both -p target=500 -p recordcount=100000 -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p operationcount=100000 -p scylla.local_dc="ldc1" -p scylla.tokenaware=true -p scylla.hosts="scylla-stress-test.dataplatform.dev.smartnews.net" -p scylla.username=cassandra -p scylla.password=cassandra -p table="usertable"
