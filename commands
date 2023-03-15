@@ -1,24 +1,16 @@
-#### for scylla driver 4.x test
-mvn install:install-file -DgroupId=com.scylladb -DartifactId=java-driver-core -Dversion=4.14.1-sn0.0 -Dpackaging=jar -Dfile=./scylla/target/dependency/java-driver-core-4.14.1-sn0.0.jar
+#### local trigger for ddb
+k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb load dynamodb -p measurement.interval=both -p target=500 -p dynamodb.endpoint=http://scylla-stress-test.dataplatform.dev.smartnews.net:8000 -p dynamodb.awsCredentialsFile=/opt/YCSB/dynamodb/conf/AWSCredentials.properties -P dynamodb/workload/workloada -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p insertstart=0 -p insertcount=100000 -P dynamodb/conf/dynamodb.properties -threads 6
 
-mvn install:install-file -DgroupId=com.scylladb -DartifactId=java-driver-query-builder -Dversion=4.14.1-sn0.0 -Dpackaging=jar -Dfile=./scylla/target/dependency/java-driver-query-builder-4.14.1-sn0.0.jar
-
-mvn install:install-file -DgroupId=com.datastax.oss -DartifactId=java-driver-shaded-guava -Dversion=25.1-jre-graal-sub-1 -Dpackaging=jar -Dfile=./scylla/target/dependency/java-driver-shaded-guava-25.1-jre-graal-sub-1.jar 
-
-mvn install -pl scylla -am -Dmaven.test.skip=true
-
-nohup bin/ycsb load scylla -s -P workloads/workloada -threads 3 -p recordcount=100000 -p readpropotion=0.1 -p updateproportion=0.9 -p fieldcount=1 -p fieldlength=10 -p insertstart=0 -p insertcount=100000 -p scylla.username=cassandra -p scylla.password=cassandra -p table="usertable" &
+k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb run dynamodb -p measurement.interval=both -p target=500 -p dynamodb.endpoint=http://scylla-stress-test.dataplatform.dev.smartnews.net:8000 -p dynamodb.awsCredentialsFile=/opt/YCSB/dynamodb/conf/AWSCredentials.properties -P dynamodb/workload/workloada -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p insertstart=0 -p insertcount=100000 -P dynamodb/conf/dynamodb.properties -threads 6
 
 
-#### for alternator 1.4 test
-mvn install:install-file -DgroupId=com.scylladb -DartifactId=java-driver-core -Dversion=4.14.1-sn0.1 -Dpackaging=jar -Dfile=./dynamodb/target/dependency/java-driver-core-4.14.1-sn0.1.jar
+#### local trigger for scylla
+k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb load scylla -s -P workloads/workloada -threads 5 -p measurement.interval=both -p target=500 -p recordcount=100000 -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p operationcount=100000 -p scylla.local_dc="ldc1" -p scylla.tokenaware=true -p scylla.hosts="scylla-stress-test.dataplatform.dev.smartnews.net" -p scylla.username=cassandra -p scylla.password=cassandra -p table="usertable"
 
-mvn install:install-file -DgroupId=com.scylladb -DartifactId=java-driver-query-builder -Dversion=4.14.1-sn0.1 -Dpackaging=jar -Dfile=./dynamodb/target/dependency/java-driver-query-builder-4.14.1-sn0.1.jar
 
-mvn install:install-file -DgroupId=com.datastax.oss -DartifactId=java-driver-shaded-guava -Dversion=25.1-jre-graal-sub-1 -Dpackaging=jar -Dfile=./dynamodb/target/dependency/java-driver-shaded-guava-25.1-jre-graal-sub-1.jar 
+k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb run scylla -s -P workloads/workloada -threads 5 -p measurement.interval=both -p target=500 -p recordcount=100000 -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p operationcount=100000 -p scylla.local_dc="ldc1" -p scylla.tokenaware=true -p scylla.hosts="scylla-stress-test.dataplatform.dev.smartnews.net" -p scylla.username=cassandra -p scylla.password=cassandra -p table="usertable"
 
-mvn install:install-file -DgroupId=com.smartnews.dp.scylladb.alternator -DartifactId=LoadBalancing-shaded -Dversion=1.4 -Dpackaging=jar -Dfile=./dynamodb/target/dependency/LoadBalancing-shaded-1.4.jar
 
-mvn install -pl dynamodb -am -Dmaven.test.skip=true
-
-bin/ycsb run dynamodb -p table=u2i -p dynamodb.endpoint="http://10.0.80.154:8000" -p measurement.interval=both -p target=20000 -p readproportion=0.5 -p updateproportion=0.5 -P dynamodb/workload/workloada -P dynamodb/conf/dynamodb.properties -threads 30 &
+#### image build
+docker build -t public.ecr.aws/j9i4p5a8/ycsb:v1 .
+docker push public.ecr.aws/j9i4p5a8/ycsb:v1

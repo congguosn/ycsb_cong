@@ -1,0 +1,6 @@
+https://github.com/techiescamp/kubernetes-prometheus/blob/master/prometheus-deployment.yaml
+https://github.com/techiescamp/kubernetes-prometheus/blob/master/config-map.yaml
+
+
+## 9091 is local port
+k port-forward pod/prometheus-deployment-74878d79c8-76lsh 9091:9090 -n $RT

@@ -1,2 +1,3 @@
-ycsb load dynamodb -p measurement.interval=both -p target=20000 -P dynamodb/workload/workloada -P dynamodb/conf/dynamodb.properties -threads 100
-ycsb run dynamodb -p measurement.interval=both -p target=20000 -P dynamodb/workload/workloada -P dynamodb/conf/dynamodb.properties -threads 100
+bin/ycsb load dynamodb -p measurement.interval=both -p target=500 -p dynamodb.endpoint=http://172.17.0.2:8000 -p dynamodb.awsCredentialsFile=/opt/YCSB/dynamodb/conf/AWSCredentials.properties -P dynamodb/workload/workloada -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p insertstart=0 -p insertcount=100000 -P dynamodb/conf/dynamodb.properties -threads 6
+
+bin/ycsb run dynamodb -p measurement.interval=both -p target=500 -p dynamodb.endpoint=http://172.17.0.2:8000 -p dynamodb.awsCredentialsFile=/opt/YCSB/dynamodb/conf/AWSCredentials.properties -P dynamodb/workload/workloada -p readproportion=0.5 -p updateproportion=0.5 -p fieldcount=10 -p fieldlength=50 -p insertstart=0 -p insertcount=100000 -P dynamodb/conf/dynamodb.properties -threads 6
