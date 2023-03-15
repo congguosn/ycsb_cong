@@ -32,7 +32,9 @@ import com.datastax.oss.driver.api.querybuilder.select.Select;
 import com.datastax.oss.driver.api.querybuilder.select.SelectFrom;
 import com.datastax.oss.driver.api.querybuilder.update.Assignment;
 import com.datastax.oss.driver.api.querybuilder.update.UpdateStart;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import site.ycsb.ByteArrayByteIterator;
 import site.ycsb.ByteIterator;
@@ -79,6 +81,13 @@ public class ScyllaCQLClient extends DB {
   public static final String TRACING_PROPERTY = "scylla.tracing";
   public static final String TRACING_PROPERTY_DEFAULT = "false";
 
+  public static final String USERNAME_PROPERTY = "scylla.username";
+  public static final String PASSWORD_PROPERTY = "scylla.password";
+
+  public static final String HOSTS_PROPERTY = "scylla.hosts";
+  public static final String PORT_PROPERTY = "scylla.port";
+  public static final String PORT_PROPERTY_DEFAULT = "9042";
+
   /**
    * Count the number of times initialized to teardown on the last
    * {@link #cleanup()}.
@@ -111,8 +120,28 @@ public class ScyllaCQLClient extends DB {
         debug = Boolean.parseBoolean(getProperties().getProperty("debug", "false"));
         trace = Boolean.parseBoolean(getProperties().getProperty(TRACING_PROPERTY, TRACING_PROPERTY_DEFAULT));
 
+        String username = getProperties().getProperty(USERNAME_PROPERTY);
+        String password = getProperties().getProperty(PASSWORD_PROPERTY);
+
+        String host = getProperties().getProperty(HOSTS_PROPERTY);
+        if (host == null) {
+          throw new DBException(String.format("Required property \"%s\" missing for scyllaCQLClient", HOSTS_PROPERTY));
+        }
+        String[] hosts = host.split(",");
+        String port = getProperties().getProperty(PORT_PROPERTY, PORT_PROPERTY_DEFAULT);
+        if (port == null || port.isEmpty()) {
+          port = "9042";
+        }
+
+        Collection<InetSocketAddress> contactPoints = new ArrayList<>();
+        for (String curHost : hosts) {
+          contactPoints.add(new InetSocketAddress(curHost, Integer.parseInt(port)));
+        }
+
         session = CqlSession.builder()
             .withKeyspace(getProperties().getProperty(KEYSPACE_PROPERTY, KEYSPACE_PROPERTY_DEFAULT))
+            .withAuthCredentials(username, password)
+            .addContactPoints(contactPoints)
             .build();
       } catch (Exception e) {
         throw new DBException(e);
