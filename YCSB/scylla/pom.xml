@@ -38,12 +38,7 @@ LICENSE file.
   <dependencies>
     <dependency>
       <groupId>com.scylladb</groupId>
-      <artifactId>java-driver-core</artifactId>
-      <version>${scylla.cql.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.scylladb</groupId>
-      <artifactId>java-driver-query-builder</artifactId>
+      <artifactId>scylla-driver-core</artifactId>
       <version>${scylla.cql.version}</version>
     </dependency>
     <dependency>
@@ -51,11 +46,6 @@ LICENSE file.
       <artifactId>core</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.datastax.oss</groupId>
-      <artifactId>native-protocol</artifactId>
-      <version>1.5.1</version>
     </dependency>
     <dependency>
       <groupId>org.cassandraunit</groupId>
@@ -129,10 +119,4 @@ LICENSE file.
       </plugin>
     </plugins>
   </build>
-  <repositories>
-    <repository>
-      <id>smartnews</id>
-      <url>http://nexus.smartnews.be/nexus/content/repositories/smartnews</url>
-    </repository>
-  </repositories>
 </project>

@@ -15,25 +15,11 @@
  */
 package site.ycsb.db.scylla;
 
-import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.BoundStatement;
-import com.datastax.oss.driver.api.core.cql.ColumnDefinition;
-import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import com.datastax.oss.driver.api.core.cql.ResultSet;
-import com.datastax.oss.driver.api.core.cql.Row;
-import com.datastax.oss.driver.api.core.cql.SimpleStatement;
-import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
-
-
-import com.datastax.oss.driver.api.querybuilder.insert.InsertInto;
-import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
-import com.datastax.oss.driver.api.querybuilder.select.Select;
-import com.datastax.oss.driver.api.querybuilder.select.SelectFrom;
-import com.datastax.oss.driver.api.querybuilder.update.Assignment;
-import com.datastax.oss.driver.api.querybuilder.update.UpdateStart;
-import java.util.ArrayList;
-import java.util.List;
+import com.datastax.driver.core.*;
+import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
+import com.datastax.driver.core.policies.LoadBalancingPolicy;
+import com.datastax.driver.core.policies.TokenAwarePolicy;
+import com.datastax.driver.core.querybuilder.*;
 import site.ycsb.ByteArrayByteIterator;
 import site.ycsb.ByteIterator;
 import site.ycsb.DB;
@@ -62,7 +48,8 @@ public class ScyllaCQLClient extends DB {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ScyllaCQLClient.class);
 
-  private static CqlSession session = null;
+  private static Cluster cluster = null;
+  private static Session session = null;
 
   private static final ConcurrentMap<Set<String>, PreparedStatement> READ_STMTS = new ConcurrentHashMap<>();
   private static final ConcurrentMap<Set<String>, PreparedStatement> SCAN_STMTS = new ConcurrentHashMap<>();
@@ -72,12 +59,40 @@ public class ScyllaCQLClient extends DB {
   private static final AtomicReference<PreparedStatement> SCAN_ALL_STMT = new AtomicReference<>();
   private static final AtomicReference<PreparedStatement> DELETE_STMT = new AtomicReference<>();
 
+  private static ConsistencyLevel readConsistencyLevel = ConsistencyLevel.QUORUM;
+  private static ConsistencyLevel writeConsistencyLevel = ConsistencyLevel.QUORUM;
+
+  private static boolean lwt = false;
+
   public static final String YCSB_KEY = "y_id";
   public static final String KEYSPACE_PROPERTY = "scylla.keyspace";
   public static final String KEYSPACE_PROPERTY_DEFAULT = "ycsb";
+  public static final String USERNAME_PROPERTY = "scylla.username";
+  public static final String PASSWORD_PROPERTY = "scylla.password";
+
+  public static final String HOSTS_PROPERTY = "scylla.hosts";
+  public static final String PORT_PROPERTY = "scylla.port";
+  public static final String PORT_PROPERTY_DEFAULT = "9042";
+
+  public static final String READ_CONSISTENCY_LEVEL_PROPERTY = "scylla.readconsistencylevel";
+  public static final String READ_CONSISTENCY_LEVEL_PROPERTY_DEFAULT = readConsistencyLevel.name();
+  public static final String WRITE_CONSISTENCY_LEVEL_PROPERTY = "scylla.writeconsistencylevel";
+  public static final String WRITE_CONSISTENCY_LEVEL_PROPERTY_DEFAULT = writeConsistencyLevel.name();
+
+  public static final String MAX_CONNECTIONS_PROPERTY = "scylla.maxconnections";
+  public static final String CORE_CONNECTIONS_PROPERTY = "scylla.coreconnections";
+  public static final String CONNECT_TIMEOUT_MILLIS_PROPERTY = "scylla.connecttimeoutmillis";
+  public static final String READ_TIMEOUT_MILLIS_PROPERTY = "scylla.readtimeoutmillis";
+
+  public static final String SCYLLA_LWT = "scylla.lwt";
+
+  public static final String TOKEN_AWARE_LOCAL_DC = "scylla.local_dc";
 
   public static final String TRACING_PROPERTY = "scylla.tracing";
   public static final String TRACING_PROPERTY_DEFAULT = "false";
+
+  public static final String USE_SSL_CONNECTION = "scylla.useSSL";
+  private static final String DEFAULT_USE_SSL_CONNECTION = "false";
 
   /**
    * Count the number of times initialized to teardown on the last
@@ -103,17 +118,119 @@ public class ScyllaCQLClient extends DB {
     // cluster/session instance for all the threads.
     synchronized (INIT_COUNT) {
 
-      if (session != null) {
+      // Check if the cluster has already been initialized
+      if (cluster != null) {
         return;
       }
 
       try {
+
         debug = Boolean.parseBoolean(getProperties().getProperty("debug", "false"));
         trace = Boolean.parseBoolean(getProperties().getProperty(TRACING_PROPERTY, TRACING_PROPERTY_DEFAULT));
 
-        session = CqlSession.builder()
-            .withKeyspace(getProperties().getProperty(KEYSPACE_PROPERTY, KEYSPACE_PROPERTY_DEFAULT))
-            .build();
+        String host = getProperties().getProperty(HOSTS_PROPERTY);
+        if (host == null) {
+          throw new DBException(String.format("Required property \"%s\" missing for scyllaCQLClient", HOSTS_PROPERTY));
+        }
+        String[] hosts = host.split(",");
+        String port = getProperties().getProperty(PORT_PROPERTY, PORT_PROPERTY_DEFAULT);
+
+        String username = getProperties().getProperty(USERNAME_PROPERTY);
+        String password = getProperties().getProperty(PASSWORD_PROPERTY);
+
+        String keyspace = getProperties().getProperty(KEYSPACE_PROPERTY, KEYSPACE_PROPERTY_DEFAULT);
+
+        readConsistencyLevel = ConsistencyLevel.valueOf(
+            getProperties().getProperty(READ_CONSISTENCY_LEVEL_PROPERTY, READ_CONSISTENCY_LEVEL_PROPERTY_DEFAULT));
+        writeConsistencyLevel = ConsistencyLevel.valueOf(
+            getProperties().getProperty(WRITE_CONSISTENCY_LEVEL_PROPERTY, WRITE_CONSISTENCY_LEVEL_PROPERTY_DEFAULT));
+
+        boolean useSSL = Boolean.parseBoolean(
+            getProperties().getProperty(USE_SSL_CONNECTION, DEFAULT_USE_SSL_CONNECTION));
+
+        Cluster.Builder builder;
+        if ((username != null) && !username.isEmpty()) {
+          builder = Cluster.builder().withCredentials(username, password)
+              .addContactPoints(hosts).withPort(Integer.parseInt(port));
+          if (useSSL) {
+            builder = builder.withSSL();
+          }
+        } else {
+          builder = Cluster.builder().withPort(Integer.parseInt(port))
+              .addContactPoints(hosts);
+        }
+
+        final String localDC = getProperties().getProperty(TOKEN_AWARE_LOCAL_DC);
+        if (localDC != null && !localDC.isEmpty()) {
+          final LoadBalancingPolicy local = DCAwareRoundRobinPolicy.builder().withLocalDc(localDC).build();
+          final TokenAwarePolicy tokenAware = new TokenAwarePolicy(local);
+          builder = builder.withLoadBalancingPolicy(tokenAware);
+
+          LOGGER.info("Using local datacenter with token awareness: {}\n", localDC);
+
+          // If was not overridden explicitly, set LOCAL_QUORUM
+          if (getProperties().getProperty(READ_CONSISTENCY_LEVEL_PROPERTY) == null) {
+            readConsistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
+          }
+
+          if (getProperties().getProperty(WRITE_CONSISTENCY_LEVEL_PROPERTY) == null) {
+            writeConsistencyLevel = ConsistencyLevel.LOCAL_QUORUM;
+          }
+        }
+
+        cluster = builder.build();
+
+        String maxConnections = getProperties().getProperty(
+            MAX_CONNECTIONS_PROPERTY);
+        if (maxConnections != null) {
+          cluster.getConfiguration().getPoolingOptions()
+              .setMaxConnectionsPerHost(HostDistance.LOCAL, Integer.parseInt(maxConnections));
+        }
+
+        String coreConnections = getProperties().getProperty(
+            CORE_CONNECTIONS_PROPERTY);
+        if (coreConnections != null) {
+          cluster.getConfiguration().getPoolingOptions()
+              .setCoreConnectionsPerHost(HostDistance.LOCAL, Integer.parseInt(coreConnections));
+        }
+
+        String connectTimeoutMillis = getProperties().getProperty(
+            CONNECT_TIMEOUT_MILLIS_PROPERTY);
+        if (connectTimeoutMillis != null) {
+          cluster.getConfiguration().getSocketOptions()
+              .setConnectTimeoutMillis(Integer.parseInt(connectTimeoutMillis));
+        }
+
+        String readTimeoutMillis = getProperties().getProperty(
+            READ_TIMEOUT_MILLIS_PROPERTY);
+        if (readTimeoutMillis != null) {
+          cluster.getConfiguration().getSocketOptions()
+              .setReadTimeoutMillis(Integer.parseInt(readTimeoutMillis));
+        }
+
+        Metadata metadata = cluster.getMetadata();
+        LOGGER.info("Connected to cluster: {}\n", metadata.getClusterName());
+
+        for (Host discoveredHost : metadata.getAllHosts()) {
+          LOGGER.info("Datacenter: {}; Host: {}; Rack: {}\n",
+              discoveredHost.getDatacenter(), discoveredHost.getEndPoint().resolve().getAddress(),
+              discoveredHost.getRack());
+        }
+
+        session = cluster.connect(keyspace);
+
+        if (Boolean.parseBoolean(getProperties().getProperty(SCYLLA_LWT, Boolean.toString(lwt)))) {
+          LOGGER.info("Using LWT\n");
+          lwt = true;
+          readConsistencyLevel = ConsistencyLevel.SERIAL;
+          writeConsistencyLevel = ConsistencyLevel.ANY;
+        } else {
+          LOGGER.info("Not using LWT\n");
+        }
+
+        LOGGER.info("Read consistency: {}, Write consistency: {}\n",
+            readConsistencyLevel.name(),
+            writeConsistencyLevel.name());
       } catch (Exception e) {
         throw new DBException(e);
       }
@@ -139,6 +256,10 @@ public class ScyllaCQLClient extends DB {
         if (session != null) {
           session.close();
           session = null;
+        }
+        if (cluster != null) {
+          cluster.close();
+          cluster = null;
         }
       }
       if (curInitCount < 0) {
@@ -168,59 +289,60 @@ public class ScyllaCQLClient extends DB {
     try {
       PreparedStatement stmt = (fields == null) ? READ_ALL_STMT.get() : READ_STMTS.get(fields);
 
-      Select query = null;
+      // Prepare statement on demand
       if (stmt == null) {
-        SelectFrom select = QueryBuilder.selectFrom(table);
+        Select.Builder selectBuilder;
 
         if (fields == null) {
-          query = select.all();
+          selectBuilder = QueryBuilder.select().all();
         } else {
+          selectBuilder = QueryBuilder.select();
           for (String col : fields) {
-            query = select.column(col);
+            ((Select.Selection) selectBuilder).column(col);
           }
         }
 
-        query = query.whereColumn(YCSB_KEY).isEqualTo(QueryBuilder.bindMarker()).limit(1);
-        stmt = session.prepare(query.build());
+        stmt = session.prepare(selectBuilder.from(table)
+            .where(QueryBuilder.eq(YCSB_KEY, QueryBuilder.bindMarker()))
+            .limit(1));
+        stmt.setConsistencyLevel(readConsistencyLevel);
+        if (trace) {
+          stmt.enableTracing();
+        }
+
+        PreparedStatement prevStmt = (fields == null) ?
+            READ_ALL_STMT.getAndSet(stmt) :
+            READ_STMTS.putIfAbsent(new HashSet<>(fields), stmt);
+        if (prevStmt != null) {
+          stmt = prevStmt;
+        }
       }
 
-      PreparedStatement prevStmt = (fields == null) ?
-          READ_ALL_STMT.getAndSet(stmt) :
-          READ_STMTS.putIfAbsent(new HashSet<>(fields), stmt);
-      if (prevStmt != null) {
-        stmt = prevStmt;
-      }
-
-      LOGGER.debug(stmt.getQuery());
+      LOGGER.debug(stmt.getQueryString());
       LOGGER.debug("key = {}", key);
 
       ResultSet rs = session.execute(stmt.bind(key));
 
-      // Should be only 1 row
-      List<Row> rows = rs.all();
-      if (rows.isEmpty()) {
-        return Status.NOT_FOUND;
-      }
-      Row row = rows.get(0);
-      if (row == null) {
+      if (rs.isExhausted()) {
         return Status.NOT_FOUND;
       }
 
+      // Should be only 1 row
+      Row row = rs.one();
       ColumnDefinitions cd = row.getColumnDefinitions();
 
-      for (ColumnDefinition def : cd) {
+      for (ColumnDefinitions.Definition def : cd) {
         ByteBuffer val = row.getBytesUnsafe(def.getName());
         if (val != null) {
-          result.put(def.getName().toString(), new ByteArrayByteIterator(val.array()));
+          result.put(def.getName(), new ByteArrayByteIterator(val.array()));
         } else {
-          result.put(def.getName().toString(), null);
+          result.put(def.getName(), null);
         }
       }
 
       return Status.OK;
 
     } catch (Exception e) {
-      e.printStackTrace();
       LOGGER.error(MessageFormatter.format("Error reading key: {}", key).getMessage(), e);
       return Status.ERROR;
     }
@@ -251,7 +373,77 @@ public class ScyllaCQLClient extends DB {
   public Status scan(String table, String startkey, int recordcount,
                      Set<String> fields, Vector<HashMap<String, ByteIterator>> result) {
 
-    return Status.OK;
+    try {
+      PreparedStatement stmt = (fields == null) ? SCAN_ALL_STMT.get() : SCAN_STMTS.get(fields);
+
+      // Prepare statement on demand
+      if (stmt == null) {
+        Select.Builder selectBuilder;
+
+        if (fields == null) {
+          selectBuilder = QueryBuilder.select().all();
+        } else {
+          selectBuilder = QueryBuilder.select();
+          for (String col : fields) {
+            ((Select.Selection) selectBuilder).column(col);
+          }
+        }
+
+        Select selectStmt = selectBuilder.from(table);
+
+        // The statement builder is not setup right for tokens.
+        // So, we need to build it manually.
+        String initialStmt = selectStmt.toString();
+        String scanStmt = initialStmt.substring(0, initialStmt.length() - 1) +
+            " WHERE " + QueryBuilder.token(YCSB_KEY) +
+            " >= token(" + QueryBuilder.bindMarker() + ")" +
+            " LIMIT " + QueryBuilder.bindMarker();
+        stmt = session.prepare(scanStmt);
+        stmt.setConsistencyLevel(readConsistencyLevel);
+        if (trace) {
+          stmt.enableTracing();
+        }
+
+        PreparedStatement prevStmt = (fields == null) ?
+            SCAN_ALL_STMT.getAndSet(stmt) :
+            SCAN_STMTS.putIfAbsent(new HashSet<>(fields), stmt);
+        if (prevStmt != null) {
+          stmt = prevStmt;
+        }
+      }
+
+      LOGGER.debug(stmt.getQueryString());
+      LOGGER.debug("startKey = {}, recordcount = {}", startkey, recordcount);
+
+      ResultSet rs = session.execute(stmt.bind(startkey, recordcount));
+
+      HashMap<String, ByteIterator> tuple;
+      while (!rs.isExhausted()) {
+        Row row = rs.one();
+        tuple = new HashMap<>();
+
+        ColumnDefinitions cd = row.getColumnDefinitions();
+
+        for (ColumnDefinitions.Definition def : cd) {
+          ByteBuffer val = row.getBytesUnsafe(def.getName());
+          if (val != null) {
+            tuple.put(def.getName(), new ByteArrayByteIterator(val.array()));
+          } else {
+            tuple.put(def.getName(), null);
+          }
+        }
+
+        result.add(tuple);
+      }
+
+      return Status.OK;
+
+    } catch (Exception e) {
+      LOGGER.error(
+          MessageFormatter.format("Error scanning with startkey: {}", startkey).getMessage(), e);
+      return Status.ERROR;
+    }
+
   }
 
   /**
@@ -276,20 +468,26 @@ public class ScyllaCQLClient extends DB {
 
       // Prepare statement on demand
       if (stmt == null) {
-        UpdateStart update = QueryBuilder.update(table);
+        Update updateStmt = QueryBuilder.update(table);
 
         // Add fields
-        List<Assignment> assignmentList = new ArrayList<>();
         for (String field : fields) {
-          assignmentList.add(
-              Assignment.setColumn(field, QueryBuilder.bindMarker())
-          );
+          updateStmt.with(QueryBuilder.set(field, QueryBuilder.bindMarker()));
         }
 
-        SimpleStatement singleStmt = update.set(assignmentList)
-            .whereColumn(YCSB_KEY).isEqualTo(QueryBuilder.bindMarker()).build();
+        // Add key
+        updateStmt.where(QueryBuilder.eq(YCSB_KEY, QueryBuilder.bindMarker()));
 
-        stmt = session.prepare(singleStmt);
+        if (lwt) {
+          updateStmt.where().ifExists();
+        }
+
+        stmt = session.prepare(updateStmt);
+        stmt.setConsistencyLevel(writeConsistencyLevel);
+        if (trace) {
+          stmt.enableTracing();
+        }
+
         PreparedStatement prevStmt = UPDATE_STMTS.putIfAbsent(new HashSet<>(fields), stmt);
         if (prevStmt != null) {
           stmt = prevStmt;
@@ -297,7 +495,7 @@ public class ScyllaCQLClient extends DB {
       }
 
       if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug(stmt.getQuery().toString());
+        LOGGER.debug(stmt.getQueryString());
         LOGGER.debug("key = {}", key);
         for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
           LOGGER.debug("{} = {}", entry.getKey(), entry.getValue());
@@ -305,16 +503,14 @@ public class ScyllaCQLClient extends DB {
       }
 
       // Add fields
-      ColumnDefinitions vars = stmt.getVariableDefinitions();
+      ColumnDefinitions vars = stmt.getVariables();
       BoundStatement boundStmt = stmt.bind();
       for (int i = 0; i < vars.size() - 1; i++) {
-        String filedName = vars.get(i).getName().toString();
-        String value = values.get(filedName).toString();
-        boundStmt = boundStmt.setString(i, value);
+        boundStmt.setString(i, values.get(vars.getName(i)).toString());
       }
 
       // Add key
-      boundStmt = boundStmt.setString(vars.size() - 1, key);
+      boundStmt.setString(vars.size() - 1, key);
 
       session.execute(boundStmt);
 
@@ -348,18 +544,37 @@ public class ScyllaCQLClient extends DB {
 
       // Prepare statement on demand
       if (stmt == null) {
-        InsertInto insert = QueryBuilder.insertInto(table);
-        RegularInsert regularInsert = insert.value(YCSB_KEY, QueryBuilder.bindMarker());
+        Insert insertStmt = QueryBuilder.insertInto(table);
+
+        // Add key
+        insertStmt.value(YCSB_KEY, QueryBuilder.bindMarker());
 
         // Add fields
         for (String field : fields) {
-          regularInsert = regularInsert.value(field, QueryBuilder.bindMarker());
+          insertStmt.value(field, QueryBuilder.bindMarker());
         }
 
-        stmt = session.prepare(regularInsert.build());
+        if (lwt) {
+          insertStmt.ifNotExists();
+        }
+
+        stmt = session.prepare(insertStmt);
+        stmt.setConsistencyLevel(writeConsistencyLevel);
+        if (trace) {
+          stmt.enableTracing();
+        }
+
         PreparedStatement prevStmt = INSERT_STMTS.putIfAbsent(new HashSet<>(fields), stmt);
         if (prevStmt != null) {
           stmt = prevStmt;
+        }
+      }
+
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug(stmt.getQueryString());
+        LOGGER.debug("key = {}", key);
+        for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
+          LOGGER.debug("{} = {}", entry.getKey(), entry.getValue());
         }
       }
 
@@ -367,19 +582,15 @@ public class ScyllaCQLClient extends DB {
       BoundStatement boundStmt = stmt.bind().setString(0, key);
 
       // Add fields
-      ColumnDefinitions vars = stmt.getVariableDefinitions();
+      ColumnDefinitions vars = stmt.getVariables();
       for (int i = 1; i < vars.size(); i++) {
-        String filedName = vars.get(i).getName().toString();
-        String value = values.get(filedName).toString();
-        boundStmt = boundStmt.setString(i, value);
+        boundStmt.setString(i, values.get(vars.getName(i)).toString());
       }
 
       session.execute(boundStmt);
 
       return Status.OK;
     } catch (Exception e) {
-      System.out.println(e);
-      e.printStackTrace();
       LOGGER.error(MessageFormatter.format("Error inserting key: {}", key).getMessage(), e);
     }
 
@@ -397,7 +608,42 @@ public class ScyllaCQLClient extends DB {
    */
   @Override
   public Status delete(String table, String key) {
-    return Status.OK;
+
+    try {
+      PreparedStatement stmt = DELETE_STMT.get();
+
+      // Prepare statement on demand
+      if (stmt == null) {
+        Delete s = QueryBuilder.delete().from(table);
+        s.where(QueryBuilder.eq(YCSB_KEY, QueryBuilder.bindMarker()));
+
+        if (lwt) {
+          s.ifExists();
+        }
+
+        stmt = session.prepare(s);
+        stmt.setConsistencyLevel(writeConsistencyLevel);
+        if (trace) {
+          stmt.enableTracing();
+        }
+
+        PreparedStatement prevStmt = DELETE_STMT.getAndSet(stmt);
+        if (prevStmt != null) {
+          stmt = prevStmt;
+        }
+      }
+
+      LOGGER.debug(stmt.getQueryString());
+      LOGGER.debug("key = {}", key);
+
+      session.execute(stmt.bind(key));
+
+      return Status.OK;
+    } catch (Exception e) {
+      LOGGER.error(MessageFormatter.format("Error deleting key: {}", key).getMessage(), e);
+    }
+
+    return Status.ERROR;
   }
 
 }
