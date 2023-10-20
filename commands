@@ -14,3 +14,8 @@ k exec -it ycsb-manual-run-5cb78f7744-pqmbv -n $RT -- bin/ycsb run scylla -s -P 
 #### image build
 docker build -t public.ecr.aws/j9i4p5a8/ycsb:v1 .
 docker push public.ecr.aws/j9i4p5a8/ycsb:v1
+
+
+
+### cql connection
+bin/ycsb run scylla -s -P workloads/workloada -threads 100 -p measurement.interval=both -p target=30000 -p recordcount=50000 -p readproportion=1.0 -p updateproportion=0.0 -p fieldcount=100 -p fieldlength=10 -p operationcount=10000000 -p scylla.local_dc="ldc1" -p scylla.tokenaware=true -p scylla.hosts="scylla-ads-filter-benchmark.dataplatform.smartnews.net" -p scylla.username=cassandra -p scylla.password=cassandra -p table="usertable" -p scylla.readconsistencylevel=local_one  -p scylla.coreconnections=60

@@ -1,0 +1,82 @@
+apiVersion: scylla.scylladb.com/v1
+kind: ScyllaCluster
+metadata:
+  creationTimestamp: "2023-10-17T10:51:27Z"
+  generation: 1
+  labels:
+    component: scylla
+    group: Data-Platform
+    region: ap-northeast-1
+    team: Data-Platform-SH_Non-Shared
+  name: scylla-gossip-test-6
+  namespace: realtime-streaming
+  resourceVersion: "353923055"
+  uid: 3e48f65c-e0da-4d09-9043-da3849ff3194
+spec:
+  agentRepository: docker.io/scylladb/scylla-manager-agent
+  agentVersion: 2.5.0
+  alternator:
+    port: 8000
+    writeIsolation: only_rmw_uses_lwt
+  automaticOrphanedNodeCleanup: true
+  cpuset: true
+  datacenter:
+    name: ldc4
+    racks:
+    - agentResources:
+        limits:
+          cpu: 50m
+          memory: 100M
+        requests:
+          cpu: 50m
+          memory: 100M
+      members: 1
+      name: b
+      placement:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: purpose
+                operator: In
+                values:
+                - scylla
+              - key: nodegroup
+                operator: In
+                values:
+                - scylla-xlarge
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values:
+                - ap-northeast-1b
+        tolerations:
+        - effect: NoSchedule
+          key: purpose
+          operator: Equal
+          value: scylla
+      resources:
+        limits:
+          cpu: "3"
+          memory: 25G
+        requests:
+          cpu: "3"
+          memory: 25G
+      scyllaConfig: scylla-gossip-test-a-config
+      storage:
+        capacity: 800G
+        storageClassName: local-raid-disks
+  developerMode: false
+  network:
+    hostNetworking: true
+  repository: 165463520094.dkr.ecr.ap-northeast-1.amazonaws.com/realtime-streaming/scylladb
+  scyllaArgs: --seed-provider-parameters seeds=10.0.8.175
+  version: 4.6.11-sn1
+status:
+  observedGeneration: 1
+  racks:
+    b:
+      members: 1
+      readyMembers: 1
+      stale: false
+      updatedMembers: 1
+      version: 4.6.11-sn1

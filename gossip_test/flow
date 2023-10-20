@@ -1,0 +1,13 @@
+1. list all the pods whose nodes needs to be replaced, together with there nodes name.
+2. list all the node ids mapping to above nodes.
+3. drain the last not replaced pod.
+4. terminate the node of the drained pod.
+5. wait for the drained pod to running in UN status.
+6. rebuild the new pod. (may need not, to be defined)
+   if we logs similar to below, then step 6 could be skipped
+   "INFO  2023-10-20 04:58:16,268 [shard 1] repair - Repair 1636 out of 3073 ranges, id=[id=2, uuid=5c824be9-e7f9-4b26-aaf1-30228aa53625], shard=1, keyspace=ycsb_1, table={usertable}, range=(539150944068228613, 541155779623768912], peers={10.0.8.175}, live_peers={10.0.8.175}"
+
+7. go back to step 3 and repeat step 3-6 until all the pod nodes are replaced.
+
+
+note: we could spawn all the needes nodes running 1.23 at first to speed up the whole roate process.

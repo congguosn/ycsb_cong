@@ -1,0 +1,50 @@
+apiVersion: scylla.scylladb.com/v1
+kind: ScyllaCluster
+metadata:
+  labels:
+    component: scylla
+    group: Data-Platform
+    region: ap-northeast-1
+    team: Data-Platform-SH_Non-Shared
+  name: scylla-gossip-test-6
+  namespace: realtime-streaming
+spec:
+  version: 4.6.11-sn1
+  agentVersion: 2.5.0
+  repository: 165463520094.dkr.ecr.ap-northeast-1.amazonaws.com/realtime-streaming/scylladb
+  cpuset: false
+  network:
+    hostNetworking: true
+  developerMode: false
+  scyllaArgs: --seed-provider-parameters seeds=10.0.8.175, --cpuset 0,1
+  sysctls:
+  - "fs.aio-max-nr=2097152"
+  alternator:
+    port: 8000
+    writeIsolation: 'only_rmw_uses_lwt'
+  datacenter:
+    name: ebs-1
+    racks:
+    - name: b
+      placement:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values:
+                - ap-northeast-1b
+      scyllaConfig: scylla-gossip-test-a-config
+      scyllaAgentConfig: "scylla-agent-config"
+      members: 1
+      storage:
+        capacity: 100G
+        storageClassName: gp3-xfs
+      resources:
+        requests:
+          cpu: 2
+          memory: 4G
+        limits:
+          cpu: 2
+          memory: 4G

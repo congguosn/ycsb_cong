@@ -16,6 +16,9 @@
 package site.ycsb.db.scylla;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.CqlSessionBuilder;
+import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
+import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.ColumnDefinition;
 import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
@@ -33,6 +36,7 @@ import com.datastax.oss.driver.api.querybuilder.select.SelectFrom;
 import com.datastax.oss.driver.api.querybuilder.update.Assignment;
 import com.datastax.oss.driver.api.querybuilder.update.UpdateStart;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -143,6 +147,18 @@ public class ScyllaCQLClient extends DB {
             .withAuthCredentials(username, password)
             .addContactPoints(contactPoints)
             .build();
+
+        CqlSessionBuilder builder = new CqlSessionBuilder()
+            .addContactPoint(new InetSocketAddress(contactPoint, contactPort))
+            .withConfigLoader(DriverConfigLoader.programmaticBuilder()
+                .withString(DefaultDriverOption.PROTOCOL_COMPRESSION, "lz4")
+                .withDuration(DefaultDriverOption.RECONNECTION_BASE_DELAY, Duration.ofMillis(50))
+                .withDuration(DefaultDriverOption.RECONNECTION_MAX_DELAY, Duration.ofMillis(1000))
+                //.withDuration(DefaultDriverOption.CONNECTION_CONNECT_TIMEOUT, Duration.ofSeconds(1))
+                .withString(DefaultDriverOption.LOAD_BALANCING_LOCAL_DATACENTER, "ap-northeast-1")
+                .build())
+            .withKeyspace("ads_delivery")
+            .withLocalDatacenter("ap-northeast-1");
       } catch (Exception e) {
         throw new DBException(e);
       }

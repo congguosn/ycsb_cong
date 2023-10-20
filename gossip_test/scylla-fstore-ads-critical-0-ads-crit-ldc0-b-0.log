@@ -1,0 +1,65 @@
+INFO  2023-10-18 05:20:11,611 [shard 7] schema_tables - Altering sn_fstore_dynamic_ads.dco_bodytext_id id=47cde7c0-2c26-11ee-84d9-03155d1bba3e version=4d5c5e0f-3930-3e7c-a7b1-a948373d3d1d
+INFO  2023-10-18 05:20:11,612 [shard 7] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 0] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 5] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 10] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 3] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 9] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 4] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 6] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 2] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 12] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 1] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 11] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 13] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 8] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,612 [shard 14] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_bodytext_id changed, invalidating related prepared statements
+WARN  2023-10-18 05:20:11,666 [shard 7] mutation_partition - Memory usage of unpaged query exceeds soft limit of 1048576 (configured via max_memory_for_unlimited_query_soft_limit)
+INFO  2023-10-18 05:20:11,709 [shard 7] schema_tables - Schema version changed to 8e1e6fba-f9d1-376e-b40c-9fab146daf69
+INFO  2023-10-18 05:20:11,800 [shard 3] schema_tables - Altering sn_fstore_dynamic_ads.dco_image_id id=8c54bdc0-2c25-11ee-a550-03125d1bba3e version=ccc42d3d-6330-3d06-8b30-1a48273a6c1f
+INFO  2023-10-18 05:20:11,800 [shard 3] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 0] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 5] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 7] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 4] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 2] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 6] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 8] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 9] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 11] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 13] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 10] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 12] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 1] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+INFO  2023-10-18 05:20:11,801 [shard 14] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_image_id changed, invalidating related prepared statements
+WARN  2023-10-18 05:20:11,825 [shard 3] mutation_partition - Memory usage of unpaged query exceeds soft limit of 1048576 (configured via max_memory_for_unlimited_query_soft_limit)
+INFO  2023-10-18 05:20:11,865 [shard 3] schema_tables - Schema version changed to c30c1f58-ef8f-3157-8b41-3f6ed29ea82f
+INFO  2023-10-18 06:30:06,278 [shard 1] schema_tables - Altering sn_fstore_dynamic_ads.dco_title_id id=dc36aaa0-2ac8-11ee-a0b4-030e5d1bba3e version=2ee26508-a18d-3360-bf7f-9af8b179d68f
+INFO  2023-10-18 06:30:06,280 [shard 1] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 5] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 9] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 4] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 0] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 12] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 13] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 10] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 14] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 3] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 8] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 2] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 7] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 6] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+INFO  2023-10-18 06:30:06,280 [shard 11] query_processor - Column definitions for sn_fstore_dynamic_ads.dco_title_id changed, invalidating related prepared statements
+WARN  2023-10-18 06:30:06,352 [shard 1] mutation_partition - Memory usage of unpaged query exceeds soft limit of 1048576 (configured via max_memory_for_unlimited_query_soft_limit)
+INFO  2023-10-18 06:30:06,421 [shard 1] schema_tables - Schema version changed to f90faf87-1344-3371-915b-6a53786a32fd
+INFO  2023-10-18 08:10:34,649 [shard 3] schema_tables - Altering keyspace system_traces
+WARN  2023-10-18 08:10:46,764 [shard 3] mutation_partition - Memory usage of unpaged query exceeds soft limit of 1048576 (configured via max_memory_for_unlimited_query_soft_limit)
+INFO  2023-10-18 08:10:46,792 [shard 3] schema_tables - Schema version changed to 23a06154-f229-3512-bd5c-91084b410d56
+INFO  2023-10-18 08:28:17,560 [shard 3] schema_tables - Altering keyspace system_traces
+WARN  2023-10-18 08:28:29,581 [shard 3] mutation_partition - Memory usage of unpaged query exceeds soft limit of 1048576 (configured via max_memory_for_unlimited_query_soft_limit)
+INFO  2023-10-18 08:28:29,613 [shard 3] schema_tables - Schema version changed to 41b126f0-33dd-30a4-ae5b-4bdd43b7f964
+You current Scylla release is 4.6.11 the latest minor release is 5.2.9 go to http://www.scylladb.com for upgrade instructions
+
+INFO  2023-10-19 04:23:31,406 [shard 8] schema_tables - Altering keyspace system_traces
+WARN  2023-10-19 04:23:43,042 [shard 8] mutation_partition - Memory usage of unpaged query exceeds soft limit of 1048576 (configured via max_memory_for_unlimited_query_soft_limit)
+INFO  2023-10-19 04:23:43,064 [shard 8] schema_tables - Schema version changed to 3f82b7df-4829-3e04-8bab-ed1780cacd20

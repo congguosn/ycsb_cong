@@ -1,0 +1,21 @@
+# https://github.com/scylladb/scylla-bench
+
+curl -LO https://go.dev/dl/go1.18beta1.linux-amd64.tar.gz
+tar -C /usr/local -xzf go1.18beta1.linux-amd64.tar.gz
+export GOROOT=/usr/local/go
+export GOPATH=$HOME/go
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+. ~/.bashrc
+
+git clone https://github.com/scylladb/scylla-bench
+cd scylla-bench/
+go install .
+
+
+# ingest
+scylla-bench -workload sequential -mode write -nodes scylla-ads-filter-benchmark.dataplatform.smartnews.net -username cassandra -password cassandra -table test -connection-count 128 -max-rate 30000 -concurrency 10 -clustering-row-size 1000 -consistency-level local_one
+
+
+# read
+scylla-bench -workload uniform -mode read -duration 15m -concurrency 512 -max-rate 128000 -nodes scylla-ads-filter-benchmark.dataplatform.smartnews.net -username cassandra -password cassandra -clustering-row-size 1000 -consistency-level local_one
+

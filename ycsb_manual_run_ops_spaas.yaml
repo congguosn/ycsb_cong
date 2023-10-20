@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ycsb-manual-run-cql-4-x
-  namespace: realtime-streaming
+  namespace: ops-spaas
   labels:
     app: ycsb
 spec:
@@ -26,14 +26,14 @@ spec:
       #          - ap-northeast-1d
       containers:
       - name: ycsb
-        image: public.ecr.aws/j9i4p5a8/ycsb:cql_4_x_v1
-        #image: public.ecr.aws/j9i4p5a8/ycsb:ddb_alternator_v1
+        #image: public.ecr.aws/j9i4p5a8/ycsb:cql_4_x_v1
+        image: public.ecr.aws/j9i4p5a8/ycsb:ddb_alternator_v1
         #imagePullPolicy: IfNotPresent
         imagePullPolicy: Always
         resources:
           requests:
-            memory: 4G
-            cpu: 4
+            memory: 1G
+            cpu: 1
           limits:
-            memory: 4G
-            cpu: 4
+            memory: 1G
+            cpu: 1

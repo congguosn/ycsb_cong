@@ -3,8 +3,8 @@ che.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
         <servers>
                 <server>
                         <id>smartnews-mirror</id>
-                        <username></username>
-                        <password></password>
+                        <username>cong.guo</username>
+                        <password>nBoUMlgHFCpGhk7S</password>
                 </server>
         </servers>
 
