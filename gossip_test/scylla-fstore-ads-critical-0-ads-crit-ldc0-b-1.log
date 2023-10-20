@@ -1,5 +1,0 @@
-You current Scylla release is 4.6.11 the latest minor release is 5.2.9 go to http://www.scylladb.com for upgrade instructions
-
-INFO  2023-10-19 04:23:31,408 [shard 8] schema_tables - Altering keyspace system_traces
-WARN  2023-10-19 04:23:43,304 [shard 8] mutation_partition - Memory usage of unpaged query exceeds soft limit of 1048576 (configured via max_memory_for_unlimited_query_soft_limit)
-INFO  2023-10-19 04:23:43,326 [shard 8] schema_tables - Schema version changed to 3f82b7df-4829-3e04-8bab-ed1780cacd20
